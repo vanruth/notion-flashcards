@@ -1,1 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Notion Flashcards</title>
+<style>
+  body {
+    font-family: sans-serif;
+    background: #f7f7f7;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+  }
+  .card {
+    background: white;
+    width: 320px;
+    height: 200px;
+    perspective: 1000px;
+    cursor: pointer;
+    border-radius: 16px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    margin-bottom: 20px;
+  }
+  .inner {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    transition: transform 0.6s;
+    transform-style: preserve-3d;
+  }
+  .card.flipped .inner {
+    transform: rotateY(180deg);
+  }
+  .front, .back {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    backface-visibility: hidden;
+    border-radius: 16px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 1.5em;
+    padding: 20px;
+    text-align: center;
+  }
+  .back {
+    background: #4CAF50;
+    color: white;
+    transform: rotateY(180deg);
+  }
+  .buttons {
+    display: flex;
+    justify-content: space-between;
+    width: 320px;
+  }
+  button {
+    padding: 8px 16px;
+    border: none;
+    background: #4CAF50;
+    color: white;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 1em;
+  }
+  button:disabled {
+    background: #ccc;
+    cursor: not-allowed;
+  }
+</style>
+</head>
+<body>
 
+<div class="card" id="card">
+  <div class="inner">
+    <div class="front" id="front">Loading...</div>
+    <div class="back" id="back"></div>
+  </div>
+</div>
+
+<div class="buttons">
+  <button id="prev">← Prev</button>
+  <button id="next">Next →</button>
+</div>
+
+<script>
+let cards = [];
+let current = 0;
+const card = document.getElementById('card');
+const front = document.getElementById('front');
+const back = document.getElementById('back');
+
+async function loadCards() {
+  const res = await fetch('/api/fetchNotion');
+  cards = await res.json();
+  showCard();
+}
+
+function showCard() {
+  if (cards.length === 0) {
+    front.textContent = 'No cards found';
+    back.textContent = '';
+    return;
+  }
+  const c = cards[current];
+  front.textContent = c.word;
+  back.textContent = c.translation;
+}
+
+card.addEventListener('click', () => {
+  card.classList.toggle('flipped');
+});
+
+document.getElementById('next').addEventListener('click', () => {
+  if (current < cards.length - 1) current++;
+  showCard();
+  card.classList.remove('flipped');
+});
+
+document.getElementById('prev').addEventListener('click', () => {
+  if (current > 0) current--;
+  showCard();
+  card.classList.remove('flipped');
+});
+
+loadCards();
+</script>
+
+</body>
+</html>
