@@ -1,25 +1,22 @@
-import fetch from "node-fetch";
+import { Client } from "@notionhq/client";
+
+const notion = new Client({ auth: process.env.NOTION_API_KEY });
 
 export default async function handler(req, res) {
-  const NOTION_TOKEN = process.env.NOTION_TOKEN;
-  const DATABASE_ID = process.env.DATABASE_ID;
+  try {
+    const databaseId = process.env.NOTION_DATABASE_ID;
+    const data = await notion.databases.query({
+      database_id: databaseId,
+    });
 
-  const notionRes = await fetch(`https://api.notion.com/v1/databases/${DATABASE_ID}/query`, {
-    method: "POST",
-    headers: {
-      "Authorization": `Bearer ${NOTION_TOKEN}`,
-      "Content-Type": "application/json",
-      "Notion-Version": "2022-06-28"
-    }
-  });
+    const cards = data.results.map(page => ({
+      word: page.properties["Word"]?.title?.[0]?.plain_text || "",
+      translation: page.properties["Translation"]?.rich_text?.[0]?.plain_text || "",
+    })).filter(card => card.word && card.translation);
 
-  const data = await notionRes.json();
-
-  const cards = data.results.map(page => ({
-    word: page.properties.Word?.title?.[0]?.plain_text ?? "",
-    translation: page.properties.Translation?.rich_text?.[0]?.plain_text ?? ""
-  }));
-
-  res.status(200).json(cards);
+    res.status(200).json({ cards });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: error.message });
+  }
 }
-
