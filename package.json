@@ -1,0 +1,8 @@
+{
+  "name": "notion-flashcards",
+  "version": "1.0.0",
+  "type": "module",
+  "dependencies": {
+    "@notionhq/client": "^3.12.0"
+  }
+}
